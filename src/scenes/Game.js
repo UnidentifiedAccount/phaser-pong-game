@@ -1,7 +1,7 @@
 import { Scene } from 'phaser';
 
-const WIDTH = 1024;
-const HEIGHT = 768;
+const width = 1024;
+const height = 768;
 
 export class Game extends Scene {
     constructor() {
@@ -18,6 +18,10 @@ export class Game extends Scene {
     }
 
     create() {
+        this.add.image(width/2, height/2, 'background').setScale(0.8,0.8);
+        this.ball=this.add.image(width/2, height/2, 'background').setScale(0.8,0.8);
+        this.leftpaddle(50,384, "paddle");
+        this.rightpaddle(974,384, "paddle");
     }
 
     update() {
