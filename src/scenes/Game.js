@@ -6,6 +6,9 @@ const HEIGHT = 768;
 export class Game extends Scene {
     constructor() {
         super('Game');
+        this.ball=null;
+        this.leftpaddle=null;
+        this.rightpaddle=null;
     }
 
     preload() {
