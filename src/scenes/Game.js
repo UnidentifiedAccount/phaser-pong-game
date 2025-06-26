@@ -7,8 +7,8 @@ export class Game extends Scene {
     constructor() {
         super('Game');
         this.ball=null;
-        this.leftpaddle=null;
-        this.rightpaddle=null;
+        this.leftPaddle=null;
+        this.rightPaddle=null;
     }
 
     preload() {
@@ -20,8 +20,8 @@ export class Game extends Scene {
     create() {
         this.add.image(width/2, height/2, 'background').setScale(0.8,0.8);
         this.ball=this.add.image(width/2, height/2, 'background').setScale(0.8,0.8);
-        this.leftpaddle(50,384, "paddle");
-        this.rightpaddle(974,384, "paddle");
+        this.leftPaddle(50,384, "paddle");
+        this.rightPaddle(974,384, "paddle");
     }
 
     update() {
