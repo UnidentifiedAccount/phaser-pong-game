@@ -10,6 +10,7 @@ const config = {
     parent: 'game-container',
     backgroundColor: '#000',
     physics: {
+        
         default: 'arcade',
         arcade: {
             debug: false
