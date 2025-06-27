@@ -29,6 +29,9 @@ export class Game extends Scene {
         // Flag to determine if the ball is in motion
 
         this.ballInMotion = false;
+        this.balls = []; // Track all balls
+        this.baseBallSpeed = 300;
+        this.ballSpeedMultiplier = 1.2;
 
     }
 
@@ -50,11 +53,13 @@ export class Game extends Scene {
 
         this.add.image(WIDTH / 2, HEIGHT / 2, 'background').setScale(0.8, 0.8);
 
-        this.ball = this.physics.add.image(WIDTH / 2, HEIGHT / 2, 'ball').setScale(0.05, 0.05).refreshBody();
+        // Remove old single-ball logic:
+        // this.ball = this.physics.add.image(WIDTH / 2, HEIGHT / 2, 'ball').setScale(0.05, 0.05).refreshBody();
+        // this.ball.setCollideWorldBounds(true);
+        // this.ball.setBounce(1, 1);
 
-        this.ball.setCollideWorldBounds(true);
-
-        this.ball.setBounce(1, 1);
+        // Add first ball to balls array
+        this.addBall(this.baseBallSpeed);
 
         // Set up paddles with collision with ball
 
@@ -91,6 +96,18 @@ export class Game extends Scene {
         this.rightScoreText = this.add.text(924, 50, '0', { fontSize: '50px' });
 
     }
+    addBall(speed) {
+        const ball = this.physics.add.image(WIDTH / 2, HEIGHT / 2, 'ball').setScale(0.05, 0.05).refreshBody();
+        ball.setCollideWorldBounds(true);
+        ball.setBounce(1, 1);
+        ball.setVelocity(
+            speed * (Phaser.Math.Between(0, 1) ? 1 : -1),
+            speed * (Phaser.Math.Between(0, 1) ? 1 : -1)
+        );
+        this.physics.add.collider(ball, this.leftPaddle, this.hitPaddle, null, this);
+        this.physics.add.collider(ball, this.rightPaddle, this.hitPaddle, null, this);
+        this.balls.push(ball);
+    }
 
     update() {
 
@@ -118,14 +135,27 @@ export class Game extends Scene {
 
         }
         const margin = 30;
-        if (this.ball.x < margin) {
-            this.rightscore += 1;
-            this.rightScoreText.setText(this.rightscore);
-            this.resetball();
-        } else if (this.ball.x > WIDTH - margin) {
-            this.leftScore += 1;
-            this.leftScoreText.setText(this.leftScore);
-            this.resetball();
+        for (let i = 0; i < this.balls.length; i++) {
+            const ball = this.balls[i];
+            if (ball.x < margin) {
+                this.rightscore += 1;
+                this.rightScoreText.setText(this.rightscore);
+                this.resetBalls();
+                // Add extra ball if score is a multiple of 3
+                if (this.rightscore % 3 === 0) {
+                    this.addBall(this.baseBallSpeed * Math.pow(this.ballSpeedMultiplier, this.balls.length));
+                }
+                break;
+            } else if (ball.x > WIDTH - margin) {
+                this.leftScore += 1;
+                this.leftScoreText.setText(this.leftScore);
+                this.resetBalls();
+                // Add extra ball if score is a multiple of 3
+                if (this.leftScore % 3 === 0) {
+                    this.addBall(this.baseBallSpeed * Math.pow(this.ballSpeedMultiplier, this.balls.length));
+                }
+                break;
+            }
         }
     }
 
@@ -145,10 +175,26 @@ export class Game extends Scene {
 
     }
 
-    resetball(){
-        this.ball.setPosition(WIDTH/2, 384);
-        this.ball.setVelocity(0,0);
-        this.ballInMotion=false;
-        this.startBall()
+    // Reset all balls to center and stop them, then restart
+resetBalls() {
+    for (let i = 0; i < this.balls.length; i++) {
+        this.balls[i].setPosition(WIDTH / 2, 384);
+        this.balls[i].setVelocity(0, 0);
     }
+    this.ballInMotion = false;
+    this.startBalls();
 }
+
+// Start all balls moving
+startBalls() {
+    if (!this.ballInMotion) {
+        for (let i = 0; i < this.balls.length; i++) {
+            const speed = this.baseBallSpeed * Math.pow(this.ballSpeedMultiplier, i);
+            this.balls[i].setVelocity(
+                speed * (Phaser.Math.Between(0, 1) ? 1 : -1),
+                speed * (Phaser.Math.Between(0, 1) ? 1 : -1)
+            );
+        }
+        this.ballInMotion = true;
+    }
+}}
