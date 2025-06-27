@@ -87,8 +87,8 @@ export class Game extends Scene {
             down: Phaser.Input.Keyboard.KeyCodes.S 
 
         });
-        this.leftScoreText=this.add.text('100','50','0',{fontSize:'50px'});
-        this.rightScoreText=this.add.text('924','50','0',{fontSize:'50px'});
+        this.leftScoreText = this.add.text(100, 50, '0', { fontSize: '50px' });
+        this.rightScoreText = this.add.text(924, 50, '0', { fontSize: '50px' });
 
     }
 
@@ -117,17 +117,16 @@ export class Game extends Scene {
             this.rightPaddle.y += 5;
 
         }
-        const margin=30;
-        if(this.ball.x<margin){
-            this.rightscore+=1;
+        const margin = 30;
+        if (this.ball.x < margin) {
+            this.rightscore += 1;
             this.rightScoreText.setText(this.rightscore);
-            this.resetball()
-        if(this.ball.x>WIDTH-margin){
-            this.leftscore+=1;
-            this.lefttScoreText.setText(this.lefttscore);
-            this.resetball()
+            this.resetball();
+        } else if (this.ball.x > WIDTH - margin) {
+            this.leftScore += 1;
+            this.leftScoreText.setText(this.leftScore);
+            this.resetball();
         }
-
     }
 
         startBall() {
