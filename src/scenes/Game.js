@@ -26,16 +26,23 @@ export class Game extends Scene {
         this.ball.setCollideWorldBounds(true);
         this.ball.setBounce(1,1);
         this.ball.setVelocity(500,500);
+
+        this.input.keyboard.on('keydown-SPACE', this.StartBall, this);
     }
 
     update() {
 
-    startBall()
+    }
+
+    StartBall() {
         if(!this.ballInMotion){
             this.ball.setVelocity(200,200);
-            this.ballInMotion=true;
+            this.ballInMotion=true
         }
 
     }
+    
+
+    
 
 }
