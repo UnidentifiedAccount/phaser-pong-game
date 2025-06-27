@@ -61,8 +61,8 @@ export class Game extends Scene {
             const directionX = Phaser.Math.Between(0, 1) ? 1 : -1;
             const directionY = Phaser.Math.Between(0, 1) ? 1 : -1;
             ball.setVelocity(
-                speed * directionX,
-                speed * directionY
+                this.baseBallSpeed * directionX,
+                this.baseBallSpeed * directionY
             );
         }
     }
@@ -80,10 +80,9 @@ export class Game extends Scene {
 
         // Track deflections
         ball.deflectionCount = (ball.deflectionCount || 0) + 1;
-        if (ball.deflectionCount >= 2) {
-            // Add a new ball with appropriate speed
-            this.addBall(this.baseBallSpeed * Math.pow(this.ballSpeedMultiplier, this.balls.length));
-            ball.deflectionCount = 0; // Reset for this ball
+        if (ball.deflectionCount >= 5) { // 5 deflections for new ball
+            this.addBall(this.baseBallSpeed);
+            ball.deflectionCount = 0;
         }
     }
 
@@ -107,25 +106,19 @@ export class Game extends Scene {
             if (ball.x < margin) {
                 this.rightscore += 1;
                 this.rightScoreText.setText(this.rightscore);
-                this.resetToSingleBall('right');
+                this.resetSingleBall(ball, 'right');
                 break;
             } else if (ball.x > WIDTH - margin) {
                 this.leftScore += 1;
                 this.leftScoreText.setText(this.leftScore);
-                this.resetToSingleBall('left');
+                this.resetSingleBall(ball, 'left');
                 break;
             }
         }
     }
 
-    // Remove all extra balls and reset the first ball
-    resetToSingleBall(scoredSide) {
-        // Remove all balls except the first
-        while (this.balls.length > 1) {
-            const removed = this.balls.pop();
-            removed.destroy();
-        }
-        const ball = this.balls[0];
+    // Only reset the scored ball, not all balls
+    resetSingleBall(ball, scoredSide) {
         ball.setPosition(WIDTH / 2, 384);
         ball.setVelocity(0, 0);
         ball.deflectionCount = 0;
@@ -150,12 +143,11 @@ export class Game extends Scene {
     startBalls() {
         if (!this.ballInMotion && this.leftScore === 0 && this.rightscore === 0) {
             for (let i = 0; i < this.balls.length; i++) {
-                const speed = this.baseBallSpeed * Math.pow(this.ballSpeedMultiplier, i);
                 const directionX = Phaser.Math.Between(0, 1) ? 1 : -1;
                 const directionY = Phaser.Math.Between(0, 1) ? 1 : -1;
                 this.balls[i].setVelocity(
-                    speed * directionX,
-                    speed * directionY
+                    this.baseBallSpeed * directionX,
+                    this.baseBallSpeed * directionY
                 );
             }
             this.ballInMotion = true;
