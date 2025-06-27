@@ -1,200 +1,164 @@
 import { Scene } from 'phaser';
 
 const WIDTH = 1024;
-
 const HEIGHT = 768;
 
 export class Game extends Scene {
-
     constructor() {
-
         super('Game');
-
-        // Initialise necessary variables
-
-        this.ball = null;
-
-        this.leftPaddle = null;
-
-        this.rightPaddle = null;
-
-        this.wasd = null;
-
-        this.cursors = null;
-        this.leftScore=0;
-        this.rightscore=0;
-        this.leftScoreText=null;
-        this.rightScoreText=null;
-
-        // Flag to determine if the ball is in motion
-
+        this.leftScore = 0;
+        this.rightscore = 0;
+        this.leftScoreText = null;
+        this.rightScoreText = null;
         this.ballInMotion = false;
-        this.balls = []; // Track all balls
+        this.balls = [];
         this.baseBallSpeed = 300;
         this.ballSpeedMultiplier = 1.2;
-
     }
 
     preload() {
-
-        // Load necessary assets from the assets directory
-
         this.load.image('background', 'assets/background.png');
-
         this.load.image('ball', 'assets/ball.png');
-
         this.load.image('paddle', 'assets/paddle.png');
-
     }
 
     create() {
-
-        // Add background and ball to the scene
-
         this.add.image(WIDTH / 2, HEIGHT / 2, 'background').setScale(0.8, 0.8);
 
-        // Remove old single-ball logic:
-        // this.ball = this.physics.add.image(WIDTH / 2, HEIGHT / 2, 'ball').setScale(0.05, 0.05).refreshBody();
-        // this.ball.setCollideWorldBounds(true);
-        // this.ball.setBounce(1, 1);
-
-        // Add first ball to balls array
-        this.addBall(this.baseBallSpeed);
-
-        // Set up paddles with collision with ball
-
         this.leftPaddle = this.physics.add.image(50, 384, "paddle");
-
         this.leftPaddle.setImmovable(true);
 
         this.rightPaddle = this.physics.add.image(974, 384, "paddle");
-
         this.rightPaddle.setImmovable(true);
 
-        this.physics.add.collider(this.ball, this.leftPaddle, this.hitPaddle, null, this);
-
-        this.physics.add.collider(this.ball, this.rightPaddle, this.hitPaddle, null, this);
-
-        // Listen for "keyspace down" event, calling startBall function upon press
-
-        this.input.keyboard.on('keydown-SPACE', this.startBall, this);
-
-        // Assigns U/D/L/R keys to the cursors variable
+        this.input.keyboard.on('keydown-SPACE', this.startBalls, this);
 
         this.cursors = this.input.keyboard.createCursorKeys();
-
-        // Assigns W/S keys to the wasd variable
-
         this.wasd = this.input.keyboard.addKeys({
-
-            up: Phaser.Input.Keyboard.KeyCodes.W, 
-
-            down: Phaser.Input.Keyboard.KeyCodes.S 
-
+            up: Phaser.Input.Keyboard.KeyCodes.W,
+            down: Phaser.Input.Keyboard.KeyCodes.S
         });
+
         this.leftScoreText = this.add.text(100, 50, '0', { fontSize: '50px' });
         this.rightScoreText = this.add.text(924, 50, '0', { fontSize: '50px' });
 
+        // Add the first ball, but do NOT start it moving
+        this.addBall(0); // speed 0, stationary
     }
+
     addBall(speed) {
         const ball = this.physics.add.image(WIDTH / 2, HEIGHT / 2, 'ball').setScale(0.05, 0.05).refreshBody();
         ball.setCollideWorldBounds(true);
         ball.setBounce(1, 1);
-        ball.setVelocity(
-            speed * (Phaser.Math.Between(0, 1) ? 1 : -1),
-            speed * (Phaser.Math.Between(0, 1) ? 1 : -1)
-        );
+        ball.setVelocity(0, 0); // Always start stationary
+        ball.deflectionCount = 0; // Track paddle hits
         this.physics.add.collider(ball, this.leftPaddle, this.hitPaddle, null, this);
         this.physics.add.collider(ball, this.rightPaddle, this.hitPaddle, null, this);
         this.balls.push(ball);
+
+        // If this is NOT the first ball, start it immediately
+        if (this.balls.length > 1 && speed > 0) {
+            const directionX = Phaser.Math.Between(0, 1) ? 1 : -1;
+            const directionY = Phaser.Math.Between(0, 1) ? 1 : -1;
+            ball.setVelocity(
+                speed * directionX,
+                speed * directionY
+            );
+        }
+    }
+
+    hitPaddle(ball, paddle) {
+        // Speed up by 1%
+        ball.setVelocity(ball.body.velocity.x * 1.01, ball.body.velocity.y * 1.01);
+
+        // Add random Y velocity and slightly increase X speed for more dynamic bounce
+        const newVelY = Phaser.Math.Between(-200, 200);
+        const newVelX = ball.body.velocity.x > 0 ? 
+            Math.abs(ball.body.velocity.x) + Phaser.Math.Between(10, 30) : 
+            -Math.abs(ball.body.velocity.x) - Phaser.Math.Between(10, 30);
+        ball.setVelocity(newVelX, newVelY);
+
+        // Track deflections
+        ball.deflectionCount = (ball.deflectionCount || 0) + 1;
+        if (ball.deflectionCount >= 2) {
+            // Add a new ball with appropriate speed
+            this.addBall(this.baseBallSpeed * Math.pow(this.ballSpeedMultiplier, this.balls.length));
+            ball.deflectionCount = 0; // Reset for this ball
+        }
     }
 
     update() {
-
-        // leftPaddle movement logic
-
+        // Paddle movement
         if (this.wasd.up.isDown && this.leftPaddle.y > 0) {
-
-            this.leftPaddle.y -= 5;
-
+            this.leftPaddle.y -= 20;
         } else if (this.wasd.down.isDown && this.leftPaddle.y < HEIGHT) {
-
-            this.leftPaddle.y += 5;
-
+            this.leftPaddle.y += 20;
         }
-
-        // rightPaddle movement logic
-
         if (this.cursors.up.isDown && this.rightPaddle.y > 0) {
-
-            this.rightPaddle.y -= 5;
-
+            this.rightPaddle.y -= 20;
         } else if (this.cursors.down.isDown && this.rightPaddle.y < HEIGHT) {
-
-            this.rightPaddle.y += 5;
-
+            this.rightPaddle.y += 20;
         }
+
+        // Scoring and ball reset
         const margin = 30;
         for (let i = 0; i < this.balls.length; i++) {
             const ball = this.balls[i];
             if (ball.x < margin) {
                 this.rightscore += 1;
                 this.rightScoreText.setText(this.rightscore);
-                this.resetBalls();
-                // Add extra ball if score is a multiple of 3
-                if (this.rightscore % 3 === 0) {
-                    this.addBall(this.baseBallSpeed * Math.pow(this.ballSpeedMultiplier, this.balls.length));
-                }
+                this.resetToSingleBall('right');
                 break;
             } else if (ball.x > WIDTH - margin) {
                 this.leftScore += 1;
                 this.leftScoreText.setText(this.leftScore);
-                this.resetBalls();
-                // Add extra ball if score is a multiple of 3
-                if (this.leftScore % 3 === 0) {
-                    this.addBall(this.baseBallSpeed * Math.pow(this.ballSpeedMultiplier, this.balls.length));
-                }
+                this.resetToSingleBall('left');
                 break;
             }
         }
     }
 
-        startBall() {
-
-            if (!this.ballInMotion) { // checks flag to determine if ball is NOT in motion
-
-                let initialVelocityX = 300 * (Phaser.Math.Between(0, 1) ? 1 : -1); // sets to either 300 or -300
-
-                let initialVelocityY = 300 * (Phaser.Math.Between(0, 1) ? 1 : -1); // sets to either 300 or -300
-
-                this.ball.setVelocity(initialVelocityX, initialVelocityY); // sets ball to RANDOM velocity
-
-                this.ballInMotion = true; // sets flag to ball is in motion
-
+    // Remove all extra balls and reset the first ball
+    resetToSingleBall(scoredSide) {
+        // Remove all balls except the first
+        while (this.balls.length > 1) {
+            const removed = this.balls.pop();
+            removed.destroy();
         }
+        const ball = this.balls[0];
+        ball.setPosition(WIDTH / 2, 384);
+        ball.setVelocity(0, 0);
+        ball.deflectionCount = 0;
 
-    }
-
-    // Reset all balls to center and stop them, then restart
-resetBalls() {
-    for (let i = 0; i < this.balls.length; i++) {
-        this.balls[i].setPosition(WIDTH / 2, 384);
-        this.balls[i].setVelocity(0, 0);
-    }
-    this.ballInMotion = false;
-    this.startBalls();
-}
-
-// Start all balls moving
-startBalls() {
-    if (!this.ballInMotion) {
-        for (let i = 0; i < this.balls.length; i++) {
-            const speed = this.baseBallSpeed * Math.pow(this.ballSpeedMultiplier, i);
-            this.balls[i].setVelocity(
-                speed * (Phaser.Math.Between(0, 1) ? 1 : -1),
-                speed * (Phaser.Math.Between(0, 1) ? 1 : -1)
+        // Only require SPACE if both scores are zero (game start)
+        if (this.leftScore === 0 && this.rightscore === 0) {
+            this.ballInMotion = false;
+        } else {
+            // Start this ball immediately after a score
+            const speed = this.baseBallSpeed;
+            const directionX = scoredSide === 'right' ? -1 : 1;
+            const directionY = Phaser.Math.Between(0, 1) ? 1 : -1;
+            ball.setVelocity(
+                speed * directionX,
+                speed * directionY
             );
+            this.ballInMotion = true;
         }
-        this.ballInMotion = true;
     }
-}}
+
+    // Start all balls moving (only if not already in motion and score is 0-0)
+    startBalls() {
+        if (!this.ballInMotion && this.leftScore === 0 && this.rightscore === 0) {
+            for (let i = 0; i < this.balls.length; i++) {
+                const speed = this.baseBallSpeed * Math.pow(this.ballSpeedMultiplier, i);
+                const directionX = Phaser.Math.Between(0, 1) ? 1 : -1;
+                const directionY = Phaser.Math.Between(0, 1) ? 1 : -1;
+                this.balls[i].setVelocity(
+                    speed * directionX,
+                    speed * directionY
+                );
+            }
+            this.ballInMotion = true;
+        }
+    }
+}
