@@ -9,6 +9,7 @@ export class Game extends Scene {
         this.ball=null;
         this.leftPaddle=null;
         this.rightPaddle=null;
+
     }
 
     preload() {
@@ -25,7 +26,7 @@ export class Game extends Scene {
         this.ball=this.physics.add.image(width/2, height/2, 'ball').setScale(0.05, 0.05).refreshBody();
         this.ball.setCollideWorldBounds(true);
         this.ball.setBounce(1,1);
-        this.ball.setVelocity(500,500);
+    
 
         this.input.keyboard.on('keydown-SPACE', this.StartBall, this);
     }
