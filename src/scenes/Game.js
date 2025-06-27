@@ -25,10 +25,10 @@ export class Game extends Scene {
     create() {
         this.add.image(WIDTH / 2, HEIGHT / 2, 'background').setScale(0.8, 0.8);
 
-        this.leftPaddle = this.physics.add.image(50, 384, "paddle");
+        this.leftPaddle = this.physics.add.image(50, 384, "paddle").setScale(1, 2);
         this.leftPaddle.setImmovable(true);
 
-        this.rightPaddle = this.physics.add.image(974, 384, "paddle");
+        this.rightPaddle = this.physics.add.image(974, 384, "paddle").setScale(1, 2);
         this.rightPaddle.setImmovable(true);
 
         this.input.keyboard.on('keydown-SPACE', this.startBalls, this);
@@ -89,14 +89,14 @@ export class Game extends Scene {
     update() {
         // Paddle movement
         if (this.wasd.up.isDown && this.leftPaddle.y > 0) {
-            this.leftPaddle.y -= 20;
+            this.leftPaddle.y -= 10;
         } else if (this.wasd.down.isDown && this.leftPaddle.y < HEIGHT) {
-            this.leftPaddle.y += 20;
+            this.leftPaddle.y += 10;
         }
         if (this.cursors.up.isDown && this.rightPaddle.y > 0) {
-            this.rightPaddle.y -= 20;
+            this.rightPaddle.y -= 10;
         } else if (this.cursors.down.isDown && this.rightPaddle.y < HEIGHT) {
-            this.rightPaddle.y += 20;
+            this.rightPaddle.y += 10;
         }
 
         // Scoring and ball reset
