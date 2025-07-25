@@ -1,103 +1,52 @@
-import Phaser from 'phaser';
+import { Scene } from 'phaser';
 
-export class Game extends Phaser.Scene {
+const WIDTH = 1024;
+const HEIGHT = 768;
+
+export class Game extends Scene {
     constructor() {
-        super({ key: 'Game' });
+        super('Game');
+        // Initialise necessary variables
+        this.ball = null;
+        this.leftPaddle = null;
+        this.rightPaddle = null;
+
+        // Flag to determine if the ball is in motion
+        this.ballInMotion = false;
     }
 
-    preload() {}
+    preload() {
+        // Load necessary assets from the assets directory
+        this.load.image('background', 'assets/background.png');
+        this.load.image('ball', 'assets/ball.png');
+        this.load.image('paddle', 'assets/paddle.png');
+    }
 
     create() {
-        // Paddles
-        this.leftPaddle = this.add.rectangle(50, this.scale.height / 2, 20, 100, 0xffffff);
-        this.physics.add.existing(this.leftPaddle, true);
+        // Add background, ball, and paddles to the scene
+        this.add.image(WIDTH / 2, HEIGHT / 2, 'background').setScale(0.8, 0.8);
 
-        this.rightPaddle = this.add.rectangle(this.scale.width - 50, this.scale.height / 2, 20, 100, 0xffffff);
-        this.physics.add.existing(this.rightPaddle, true);
+        this.ball = this.physics.add.image(WIDTH / 2, HEIGHT / 2, 'ball').setScale(0.05, 0.05).refreshBody();
+        this.ball.setCollideWorldBounds(true);
+        this.ball.setBounce(1, 1);
 
-        // Ball
-        this.ball = this.add.circle(this.scale.width / 2, this.scale.height / 2, 15, 0xffffff);
-        this.physics.add.existing(this.ball);
-        this.ball.body.setCollideWorldBounds(true, 1, 1);
-        this.ball.body.setBounce(1, 1);
+        this.leftPaddle = this.add.image(50, 384, "paddle");
+        this.rightPaddle = this.add.image(974, 384, "paddle");
 
-        // Initial ball velocity
-        this.resetBall();
-
-        // Input
-        this.wKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
-        this.sKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
-        this.cursors = this.input.keyboard.createCursorKeys();
-
-        // Collisions
-        this.physics.add.collider(this.ball, this.leftPaddle, this.handlePaddleBounce, null, this);
-        this.physics.add.collider(this.ball, this.rightPaddle, this.handlePaddleBounce, null, this);
-
-        // Score
-        this.leftScore = 0;
-        this.rightScore = 0;
-        this.scoreText = this.add.text(this.scale.width / 2, 50, '0 : 0', {
-            fontSize: '48px',
-            color: '#fff'
-        }).setOrigin(0.5, 0.5);
+        // Listen for "keyspace down" event, calling startBall function upon press
+        this.input.keyboard.on('keydown-SPACE', this.startBall, this);
     }
 
     update() {
-        // Left paddle movement (W/S)
-        if (this.wKey.isDown) {
-            this.leftPaddle.y -= 8;
-        } else if (this.sKey.isDown) {
-            this.leftPaddle.y += 8;
-        }
-        // Right paddle movement (Up/Down)
-        if (this.cursors.up.isDown) {
-            this.rightPaddle.y -= 8;
-        } else if (this.cursors.down.isDown) {
-            this.rightPaddle.y += 8;
-        }
+    }
 
-        // Clamp paddles to screen
-        this.leftPaddle.y = Phaser.Math.Clamp(this.leftPaddle.y, 50, this.scale.height - 50);
-        this.rightPaddle.y = Phaser.Math.Clamp(this.rightPaddle.y, 50, this.scale.height - 50);
-
-        // Update paddle bodies
-        this.leftPaddle.body.updateFromGameObject();
-        this.rightPaddle.body.updateFromGameObject();
-
-        // Scoring
-        if (this.ball.x < 0) {
-            // Ball went out left, right player scores
-            this.rightScore++;
-            this.updateScore();
-            this.resetBall(1); // Ball moves to the right
-        } else if (this.ball.x > this.scale.width) {
-            // Ball went out right, left player scores
-            this.leftScore++;
-            this.updateScore();
-            this.resetBall(-1); // Ball moves to the left
+    startBall() {
+        if (!this.ballInMotion) { // checks flag to determine if ball is NOT in motion
+            let initialVelocityX = 300 * (Phaser.Math.Between(0, 1) ? 1 : -1); // sets to either 300 or -300
+            let initialVelocityY = 300 * (Phaser.Math.Between(0, 1) ? 1 : -1); // sets to either 300 or -300
+            this.ball.setVelocity(initialVelocityX, initialVelocityY); // sets ball to RANDOM velocity
+            this.ballInMotion = true; // sets flag to ball is in motion
         }
     }
-
-    handlePaddleBounce(ball, paddle) {
-        // Add randomness to bounce angle and speed up
-        let velocity = ball.body.velocity;
-        let speed = velocity.length();
-        let angle = Phaser.Math.Between(-45, 45);
-        let sign = ball.x < this.scale.width / 2 ? 1 : -1;
-        this.physics.velocityFromAngle(angle * sign, speed * 1.1, velocity);
-        ball.body.setVelocity(velocity.x, velocity.y);
-    }
-
-    resetBall(direction = Phaser.Math.Between(0, 1) ? 1 : -1) {
-        this.ball.setPosition(this.scale.width / 2, this.scale.height / 2);
-        let angle = Phaser.Math.Between(-30, 30);
-        let speed = 300; // Always reset to base speed
-        let velocity = new Phaser.Math.Vector2();
-        this.physics.velocityFromAngle(angle * direction, speed, velocity);
-        this.ball.body.setVelocity(velocity.x, velocity.y);
-    }
-
-    updateScore() {
-        this.scoreText.setText(`${this.leftScore} : ${this.rightScore}`);
-    }
+    
 }
