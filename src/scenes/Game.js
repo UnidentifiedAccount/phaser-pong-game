@@ -66,18 +66,20 @@ export class Game extends Phaser.Scene {
 
         // Scoring
         if (this.ball.x < 0) {
+            // Ball went out left, right player scores
             this.rightScore++;
             this.updateScore();
-            this.resetBall(-1);
+            this.resetBall(1); // Ball moves to the right
         } else if (this.ball.x > this.scale.width) {
+            // Ball went out right, left player scores
             this.leftScore++;
             this.updateScore();
-            this.resetBall(1);
+            this.resetBall(-1); // Ball moves to the left
         }
     }
 
     handlePaddleBounce(ball, paddle) {
-        // Add randomness to bounce angle
+        // Add randomness to bounce angle and speed up
         let velocity = ball.body.velocity;
         let speed = velocity.length();
         let angle = Phaser.Math.Between(-45, 45);
@@ -89,7 +91,7 @@ export class Game extends Phaser.Scene {
     resetBall(direction = Phaser.Math.Between(0, 1) ? 1 : -1) {
         this.ball.setPosition(this.scale.width / 2, this.scale.height / 2);
         let angle = Phaser.Math.Between(-30, 30);
-        let speed = 300;
+        let speed = 300; // Always reset to base speed
         let velocity = new Phaser.Math.Vector2();
         this.physics.velocityFromAngle(angle * direction, speed, velocity);
         this.ball.body.setVelocity(velocity.x, velocity.y);
